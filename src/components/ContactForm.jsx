@@ -8,6 +8,7 @@ function ContactForm() {
   });
   const [loading, setLoading] = createSignal(false);
   const [success, setSuccess] = createSignal(false);
+  const [error, setError] = createSignal('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,15 +16,30 @@ function ContactForm() {
 
     setLoading(true);
     setSuccess(false);
+    setError('');
 
-    // Implement form submission logic here, e.g., send data to backend API.
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData()),
+      });
 
-    // Simulate API call.
-    setTimeout(() => {
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess(true);
+        setFormData({ name: '', email: '', message: '' });
+      } else {
+        setError(data.error || 'حدث خطأ أثناء إرسال رسالتك. حاول مرة أخرى لاحقًا.');
+      }
+    } catch (err) {
+      setError('حدث خطأ أثناء إرسال رسالتك. حاول مرة أخرى لاحقًا.');
+    } finally {
       setLoading(false);
-      setSuccess(true);
-      setFormData({ name: '', email: '', message: '' });
-    }, 2000);
+    }
   };
 
   return (
@@ -64,6 +80,9 @@ function ContactForm() {
           </button>
           <Show when={success()}>
             <p class="text-green-600 text-center mt-4">تم إرسال رسالتك بنجاح. سنقوم بالرد عليك قريبًا.</p>
+          </Show>
+          <Show when={error()}>
+            <p class="text-red-600 text-center mt-4">{error()}</p>
           </Show>
         </form>
       </div>
